@@ -1,0 +1,128 @@
+diff --git i/lib/shell.c w/lib/shell.c
+index f8a4b7f..1028177 100644
+--- i/lib/shell.c
++++ w/lib/shell.c
+@@ -223,7 +223,7 @@ static void
+ mc_shell_recognize_path (mc_shell_t *mc_shell)
+ {
+     /* If shell is not symlinked to busybox, it is safe to assume it is a real shell */
+-    if (strstr (mc_shell->path, "/bash") != NULL || getenv ("BASH_VERSION") != NULL)
++    if (1) //strstr (mc_shell->path, "/bash") != NULL || getenv ("BASH_VERSION") != NULL)
+     {
+         mc_shell->type = SHELL_BASH;
+         mc_shell->name = "bash";
+diff --git i/lib/tty/tty-ncurses.c w/lib/tty/tty-ncurses.c
+index f70d76d..7e68edc 100644
+--- i/lib/tty/tty-ncurses.c
++++ w/lib/tty/tty-ncurses.c
+@@ -559,6 +559,7 @@ tty_fill_region (int y, int x, int rows, int cols, unsigned char ch)
+ 
+ /* --------------------------------------------------------------------------------------------- */
+ 
++#undef ENABLE_SHADOWS
+ void
+ tty_colorize_area (int y, int x, int rows, int cols, int color)
+ {
+diff --git i/m4.include/mc-use-termcap.m4 w/m4.include/mc-use-termcap.m4
+index 6781815..3067f2b 100644
+--- i/m4.include/mc-use-termcap.m4
++++ w/m4.include/mc-use-termcap.m4
+@@ -7,7 +7,7 @@ AC_DEFUN([mc_USE_TERMCAP], [
+ 	AC_DEFINE(USE_TERMCAP, 1, [Define to use termcap database])
+ 
+ 	ac_save_LIBS="$LIBS"
+-	AC_SEARCH_LIBS([tgoto], [termcap xcurses curses],
++	AC_SEARCH_LIBS([tgoto], [termcap ncurses xcurses curses],
+ 	    [MCLIBS="$MCLIBS $ac_cv_search_tgoto"],
+ 	    [AC_MSG_ERROR([Could not find a library providing tgoto])]
+ 	)
+diff --git i/m4.include/mc-with-screen-ncurses.m4 w/m4.include/mc-with-screen-ncurses.m4
+index 843d044..9dfd09d 100644
+--- i/m4.include/mc-with-screen-ncurses.m4
++++ w/m4.include/mc-with-screen-ncurses.m4
+@@ -101,8 +101,8 @@ AC_DEFUN([mc_WITH_NCURSES], [
+         LIBS="$MCLIBS"
+         AC_SEARCH_LIBS([has_colors], [ncurses], [], 
+                        [AC_MSG_ERROR([Cannot find ncurses library])])
+-        AC_SEARCH_LIBS([stdscr], [tinfo], [],
+-                       [AC_MSG_ERROR([Cannot find a library providing stdscr])])
++dnl        AC_SEARCH_LIBS([stdscr], [tinfo], [],
++ dnl                      [AC_MSG_ERROR([Cannot find a library providing stdscr])])
+         MCLIBS="$LIBS"
+ 
+         screen_type=ncurses
+@@ -111,8 +111,8 @@ AC_DEFUN([mc_WITH_NCURSES], [
+                   [Define to use ncurses for screen management])
+     else
+         LIBS="$MCLIBS"
+-        AC_SEARCH_LIBS([addwstr], [ncursesw ncurses curses], [ncursesw_found=yes],
+-                       [AC_MSG_WARN([Cannot find ncurses library, that support wide characters])])
++dnl        AC_SEARCH_LIBS([addwstr], [ncursesw ncurses curses], [ncursesw_found=yes],
++dnl                       [AC_MSG_WARN([Cannot find ncurses library, that support wide characters])])
+         MCLIBS="$LIBS"
+ 
+         if test x"$ncursesw_found" = "x"; then
+@@ -122,8 +122,8 @@ AC_DEFUN([mc_WITH_NCURSES], [
+             MCLIBS="$LIBS"
+         fi
+         LIBS="$MCLIBS"
+-        AC_SEARCH_LIBS([stdscr], [tinfow tinfo], [],
+-                       [AC_MSG_ERROR([Cannot find a library providing stdscr])])
++dnl        AC_SEARCH_LIBS([stdscr], [tinfow tinfo], [],
++dnl                       [AC_MSG_ERROR([Cannot find a library providing stdscr])])
+         MCLIBS="$LIBS"
+ 
+         dnl Check the header
+diff --git i/src/args.c w/src/args.c
+index 3da1f62..a2b39bf 100644
+--- i/src/args.c
++++ w/src/args.c
+@@ -47,7 +47,7 @@
+ /*** global variables ****************************************************************************/
+ 
+ /* If true, assume we are running on an xterm terminal */
+-gboolean mc_args__force_xterm = FALSE;
++gboolean mc_args__force_xterm = TRUE;
+ 
+ gboolean mc_args__nomouse = FALSE;
+ 
+diff --git i/src/filemanager/filegui.c w/src/filemanager/filegui.c
+index 4278c2e..438e12a 100644
+--- i/src/filemanager/filegui.c
++++ w/src/filemanager/filegui.c
+@@ -54,7 +54,7 @@
+ 
+ #if ((defined STAT_STATVFS || defined STAT_STATVFS64)                                       \
+      && (defined HAVE_STRUCT_STATVFS_F_BASETYPE || defined HAVE_STRUCT_STATVFS_F_FSTYPENAME \
+-         || (! defined HAVE_STRUCT_STATFS_F_FSTYPENAME)))
++         || (! defined HAVE_STRUCT_STATFS_F_FSTYPENAME))) && !defined(__MVS__)
+ #define USE_STATVFS 1
+ #else
+ #define USE_STATVFS 0
+@@ -290,7 +290,7 @@ filegui__check_attrs_on_fs (const char *fs_path)
+     if (statvfs_works () && statvfs (fs_path, &stfs) != 0)
+         return TRUE;
+ #else
+-    if (STATFS (fs_path, &stfs) != 0)
++//    if (STATFS (fs_path, &stfs) != 0)
+         return TRUE;
+ #endif
+ 
+diff --git i/src/subshell/common.c w/src/subshell/common.c
+index 1de4283..314141e 100644
+--- i/src/subshell/common.c
++++ w/src/subshell/common.c
+@@ -288,11 +288,13 @@ init_subshell_child (const char *pty_name)
+     /* Configure its terminal modes and window size */
+ 
+     /* Set up the pty with the same termios flags as our own tty */
++#ifndef __MVS__
+     if (tcsetattr (subshell_pty_slave, TCSANOW, &shell_mode))
+     {
+         fprintf (stderr, "Cannot set pty terminal modes: %s\r\n", unix_error_string (errno));
+         my_exit (FORK_FAILURE);
+     }
++#endif
+ 
+     /* Set the pty's size (80x25 by default on Linux) according to the */
+     /* size of the real terminal as calculated by ncurses, if possible */

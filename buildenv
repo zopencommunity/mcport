@@ -1,0 +1,138 @@
+# bump: mc-version /MC_VERSION="(.*)"/ https://github.com/MidnightCommander/mc.git|semver:*
+MC_VERSION="4.8.33"
+
+###
+### Build control file for the mc port
+###
+
+###
+### Required Environment Variables
+###
+export ZOPEN_BUILD_LINE="STABLE"
+export ZOPEN_STABLE_URL="https://github.com/MidnightCommander/mc.git"
+export ZOPEN_STABLE_TAG="4.8.33"
+export ZOPEN_STABLE_DEPS="libtool gettext glib libssh2 make m4 perl automake autoconf tar gzip pkgconfig ncurses"
+export ZOPEN_BOOTSTRAP="./autogen.sh"
+export ZOPEN_DEV_URL=""
+export ZOPEN_DEV_DEPS="make"
+export ZOPEN_CATEGORIES="shell utilities"
+export ZOPEN_EXTRA_CONFIGURE_OPTS="--disable-vfs --with-screen=ncurses"
+export ZOPEN_RUNTIME_DEPS="ncurses bash"
+# export ZOPEN_SYSTEM_PREREQ="zos25" # optional system pre-req (default=zos25)
+
+
+###
+### Build settings (Port type: BUILD, Build system: GNU Make)
+###
+### Optional Settings for GNU Make build system (Autotools)
+#export ZOPEN_EXTRA_CONFIGURE_OPTS="--with-ssl" # Add any additional configure options here
+#export ZOPEN_EXTRA_CFLAGS="-mzos-target=zosv2r5" # Add any additional compiler options here
+
+
+###
+### Required user-supplied functions
+###
+
+zopen_pre_patch() {
+  export LDFLAGS="$LDFLAGS $LIBS"
+}
+
+zopen_append_to_zoslib_env() {
+  cat <<EOF
+TERM|overrideset|linux
+ASCII_TERMINFO|set|PROJECT_ROOT/../../ncurses/ncurses/share/terminfo/
+EOF
+}
+
+zopen_check_results() {
+  dir="$1" 
+  pfx="$2" 
+  chk="$1/$2_check.log"
+  # Add logic to extract the test results here:
+  echo "actualFailures:0" 
+  echo "totalTests:1" 
+  echo "expectedFailures:0"
+  echo "expectedTotalTests:1"
+}
+
+zopen_get_version() {
+  echo "$MC_VERSION"
+}
+
+
+###
+### Custom Build Logic (if applicable)
+###
+# For libraries, this hook exports variables for other ports to use.
+#zopen_append_to_env() {
+#  cat <<END
+#if [ ! -z "\$ZOPEN_IN_ZOPEN_BUILD" ]; then
+#  export ZOPEN_EXTRA_CFLAGS="\${ZOPEN_EXTRA_CFLAGS} -I\${PWD}/include"
+#  export ZOPEN_EXTRA_CXXFLAGS="\${ZOPEN_EXTRA_CXXFLAGS} -I\${PWD}/include"
+#  export ZOPEN_EXTRA_LDFLAGS="\${ZOPEN_EXTRA_LDFLAGS} -L\${PWD}/lib"
+#  export ZOPEN_EXTRA_LIBS="\${ZOPEN_EXTRA_LIBS} -lmc"
+#fi
+#END
+#}
+
+###
+### Optional User-Supplied Hooks (uncomment to use)
+###
+
+#zopen_append_to_env() {
+#  ## This function runs as part of generation of the .env file. The output of the
+#  ## function is appended to .env.
+#}
+#
+#zopen_append_to_setup(){
+#  ## This function runs as part of generation of the setup.sh file. The output of
+#  ## the function is appended to setup.sh.
+#}
+#
+#zopen_append_to_validate_install(){
+#  ## This function runs as part of generation of the install_test.sh file. The
+#  ## output of the function is appended to install_test.sh script.
+#}
+#
+#zopen_install_caveats(){
+#  ## This function is run post install. All stdout messages are captured and
+#  ## added to the metadata.json as installation caveats.
+#}
+#
+#zopen_init(){
+#  ## This function runs after code is downloaded and patched but before the code
+#  ## is built.
+#}
+#
+#zopen_post_buildenv(){
+#  ## This function runs after the 'buildenv' is processed.
+#}
+#
+#zopen_pre_build(){
+#  ## This function runs before the 'make' step of the build is run.
+#}
+#
+#zopen_pre_check(){
+#  ## This function runs before the 'check' step of the build is run.
+#}
+#
+#zopen_pre_configure(){
+#  ## This function runs before the 'configure' step of the build is run.
+#}
+#
+#zopen_pre_install(){
+#  ## This function runs before the 'install' step of the build is run.
+#}
+#
+#zopen_post_install(){
+#  ## This function runs after the 'install' step of the build is run.
+#}
+#
+#zopen_pre_patch(){
+#  ## This function runs before the 'patch' step of the build is run.
+#}
+#
+#zopen_pre_terminate(){
+#  ## This function runs before 'zopen build' terminates.
+#}
+
