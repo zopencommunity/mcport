@@ -41,6 +41,7 @@ zopen_append_to_zoslib_env() {
   cat <<EOF
 TERM|overrideset|linux
 ASCII_TERMINFO|set|PROJECT_ROOT/../../ncurses/ncurses/share/terminfo/
+MC_DATADIR|set|PROJECT_ROOT/share/mc
 EOF
 }
 
