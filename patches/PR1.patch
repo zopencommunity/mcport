@@ -108,6 +108,33 @@ index 4278c2e..438e12a 100644
          return TRUE;
  #endif
  
+diff --git i/src/main.c w/src/main.c
+index 00f08f3..993a41b 100644
+--- i/src/main.c
++++ w/src/main.c
+@@ -141,11 +141,19 @@ OS_Setup (void)
+     /* and can be overridden by the MC_DATADIR environment variable */
+     datadir_env = g_getenv ("MC_DATADIR");
+     if (datadir_env != NULL)
+-        mc_global.sysconfig_dir = g_strdup (datadir_env);
++    {
++        char *sysconfdir_path;
++        mc_global.share_data_dir = g_strdup (datadir_env);
++        /* When MC_DATADIR is set, derive sysconfig_dir as ../../etc/mc relative to it */
++        sysconfdir_path = g_build_filename (datadir_env, "..", "..", "etc", "mc", (char *) NULL);
++        mc_global.sysconfig_dir = g_strdup (sysconfdir_path);
++        g_free (sysconfdir_path);
++    }
+     else
++    {
+         mc_global.sysconfig_dir = g_strdup (SYSCONFDIR);
+-
+-    mc_global.share_data_dir = g_strdup (DATADIR);
++        mc_global.share_data_dir = g_strdup (DATADIR);
++    }
+ }
+ 
+ /* --------------------------------------------------------------------------------------------- */
 diff --git i/src/subshell/common.c w/src/subshell/common.c
 index 1de4283..314141e 100644
 --- i/src/subshell/common.c
